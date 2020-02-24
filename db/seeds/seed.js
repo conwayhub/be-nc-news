@@ -30,8 +30,9 @@ exports.seed = function(knex) {
       */
         })
         .then(articleRows => {
-          console.log(articleRows);
           /* 
+        belongs_to = article_ID
+        created_by = NEEDS TO BECOME: Author USERNAME
 
       Your comment data is currently in the incorrect format and will violate your SQL schema. 
 
@@ -41,8 +42,10 @@ exports.seed = function(knex) {
       */
 
           const articleRef = makeRefObj(articleRows);
+          console.log(articleRef);
           const formattedComments = formatComments(commentData, articleRef);
-          return knex("comments").insert(formattedComments);
+          const finalComments = formatDates(formattedComments);
+          return knex("comments").insert(finalComments);
         });
     })
   );

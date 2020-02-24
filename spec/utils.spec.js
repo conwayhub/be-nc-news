@@ -38,16 +38,19 @@ describe("formatDates", () => {
   });
   it("when passed many objects, doesn't mutate the original objects", () => {
     const dateArray = [
-      { name: "bob", created_at: 1542284514171, topic: "mitch" },
+      { created_by: "bob", created_at: 1542284514171, topic: "mitch" },
       {
-        name: "Paulie",
+        created_by: "Paulie",
         created_at: 1416140514171,
         topic: "buns"
       },
-      { name: "hobgoblin", created_at: 1289996514171, topic: "tall people" }
+      {
+        created_by: "hobgoblin",
+        created_at: 1289996514171,
+        topic: "tall people"
+      }
     ];
     const allFormatted = formatDates(dateArray);
-    expect(allFormatted[0].name).to.equal("bob");
     expect(allFormatted[0].topic).to.equal("mitch");
     expect(allFormatted[0]).to.not.equal(dateArray[0]);
   });
@@ -56,7 +59,7 @@ describe("formatDates", () => {
 describe("makeRefObj", () => {
   it("is passed an array of objects, returns an object", () => {
     expect(
-      makeRefObj([{ name: "bob", article_id: 1, topic: "mitch" }])
+      makeRefObj([{ title: "bob", article_id: 1, topic: "mitch" }])
     ).to.deep.equal({ bob: 1 });
   });
   it("if passed one object, creates a key value pair of that object's name and it's corresponding id", () => {
@@ -64,15 +67,59 @@ describe("makeRefObj", () => {
   });
   it("scales up when passed an array of many objects", () => {
     const objects = [
-      { name: "Anne", article_id: 1, topic: "cheese" },
-      { name: "Phil", article_id: 2, topic: "bum" },
-      { name: "Bart", article_id: 3, topic: "poopie pants" }
+      { title: "Anne", article_id: 1, topic: "cheese" },
+      { title: "Phil", article_id: 2, topic: "bum" },
+      { title: "Bart", article_id: 3, topic: "poopie pants" }
     ];
     const refObj = makeRefObj(objects);
     objects.forEach(object => {
-      expect(object.article_id).to.equal(refObj[object.name]);
+      expect(object.article_id).to.equal(refObj[object.title]);
     });
   });
 });
 
-describe("formatComments", () => {});
+describe("formatComments", () => {
+  it("when passed an empty array, returns a different array", () => {
+    const arr = [];
+    expect(formatComments(arr)).to.deep.equal([]);
+    expect(formatComments(arr)).to.not.equal(arr);
+  });
+
+  it("when passed one object and a reference Array, changes the key reference", () => {
+    const arr = [
+      { title: "Anne's Article", article_id: 1, topic: "cheese" }
+      //      { title: "Phil's Article", article_id: 2, topic: "bum" },
+      //      { title: "Barticle", article_id: 3, topic: "poopie pants" }
+    ];
+    let ref = makeRefObj(arr);
+    const commentArr = [{ created_by: "paul", belongs_to: "Anne's Article" }];
+    const actual = formatComments(commentArr, ref);
+    expect(actual[0].article_id).to.deep.equal(1);
+  });
+  // it("works when scaled up to multiple objects", () => {
+  //   const arr = [
+  //     { title: "Anne's Article", article_id: 1, topic: "cheese" },
+  //     { title: "Phil's Article", article_id: 2, topic: "bum" },
+  //     { title: "Barticle", article_id: 3, topic: "poopie pants" }
+  //   ];
+  //   let ref = makeRefObj(arr);
+  //   const commentArr = [
+  //     { user: "paul", belongs_to: "Anne's Article" },
+  //     { user: "joe", belongs_to: "Barticle" },
+  //     { user: "bill", belongs_to: "Phil's Article" }
+  //   ];
+  //   const actual = formatComments(commentArr, ref);
+  //   expect(actual).to.deep.equal([
+  //     { user: "paul", article_id: 1 },
+  //     { user: "joe", article_id: 3 },
+  //     { user: "bill", article_id: 2 }
+  //   ]);
+  // });
+  it("renames 'created_by' value to 'author'", () => {
+    const arr = [{ title: "Anne's Article", article_id: 1, topic: "cheese" }];
+    let ref = makeRefObj(arr);
+    const commentArr = [{ created_by: "paul", belongs_to: "Anne's Article" }];
+    const actual = formatComments(commentArr, ref);
+    expect(actual[0]).to.deep.equal({ author: "paul", article_id: 1 });
+  });
+});

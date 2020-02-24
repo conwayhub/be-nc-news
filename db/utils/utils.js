@@ -13,9 +13,24 @@ exports.formatDates = list => {
 exports.makeRefObj = list => {
   newObj = {};
   list.forEach(object => {
-    newObj[object.name] = object.article_id;
+    newObj[object.title] = object.article_id;
   });
   return newObj;
 };
 
-exports.formatComments = (comments, articleRef) => {};
+exports.formatComments = (comments, articleRef) => {
+  // {fave article: annes article}
+  //{anne's article: 4}
+  const newArr = [];
+  comments.forEach(object => {
+    const newObj = { ...object };
+    newObj.author = object.created_by;
+    delete newObj.created_by;
+    newObj.article_id = articleRef[object.belongs_to];
+
+    delete newObj.belongs_to;
+
+    newArr.push(newObj);
+  });
+  return newArr;
+};
