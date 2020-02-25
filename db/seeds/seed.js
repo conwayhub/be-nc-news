@@ -42,10 +42,11 @@ exports.seed = function(knex) {
       */
 
           const articleRef = makeRefObj(articleRows);
-          console.log(articleRef);
           const formattedComments = formatComments(commentData, articleRef);
           const finalComments = formatDates(formattedComments);
-          return knex("comments").insert(finalComments);
+          return knex("comments")
+            .insert(finalComments)
+            .returning("*");
         });
     })
   );

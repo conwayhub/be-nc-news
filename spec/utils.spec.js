@@ -96,30 +96,50 @@ describe("formatComments", () => {
     const actual = formatComments(commentArr, ref);
     expect(actual[0].article_id).to.deep.equal(1);
   });
-  // it("works when scaled up to multiple objects", () => {
-  //   const arr = [
-  //     { title: "Anne's Article", article_id: 1, topic: "cheese" },
-  //     { title: "Phil's Article", article_id: 2, topic: "bum" },
-  //     { title: "Barticle", article_id: 3, topic: "poopie pants" }
-  //   ];
-  //   let ref = makeRefObj(arr);
-  //   const commentArr = [
-  //     { user: "paul", belongs_to: "Anne's Article" },
-  //     { user: "joe", belongs_to: "Barticle" },
-  //     { user: "bill", belongs_to: "Phil's Article" }
-  //   ];
-  //   const actual = formatComments(commentArr, ref);
-  //   expect(actual).to.deep.equal([
-  //     { user: "paul", article_id: 1 },
-  //     { user: "joe", article_id: 3 },
-  //     { user: "bill", article_id: 2 }
-  //   ]);
-  // });
   it("renames 'created_by' value to 'author'", () => {
     const arr = [{ title: "Anne's Article", article_id: 1, topic: "cheese" }];
     let ref = makeRefObj(arr);
     const commentArr = [{ created_by: "paul", belongs_to: "Anne's Article" }];
     const actual = formatComments(commentArr, ref);
     expect(actual[0]).to.deep.equal({ author: "paul", article_id: 1 });
+  });
+  it("works when scaled up to multiple objects", () => {
+    const arr = [
+      { title: "Anne's Article", article_id: 1, topic: "cheese" },
+      { title: "Phil's Article", article_id: 2, topic: "bum" },
+      { title: "Barticle", article_id: 3, topic: "poopie pants" }
+    ];
+    let ref = makeRefObj(arr);
+    const commentArr = [
+      { created_by: "paul", belongs_to: "Anne's Article" },
+      { created_by: "joe", belongs_to: "Barticle" },
+      { created_by: "bill", belongs_to: "Phil's Article" }
+    ];
+    const actual = formatComments(commentArr, ref);
+    expect(actual).to.deep.equal([
+      { author: "paul", article_id: 1 },
+      { author: "joe", article_id: 3 },
+      { author: "bill", article_id: 2 }
+    ]);
+  });
+  it("doesn't mutate original object", () => {
+    const arr = [
+      { title: "Anne's Article", article_id: 1, topic: "cheese" },
+      { title: "Phil's Article", article_id: 2, topic: "bum" },
+      { title: "Barticle", article_id: 3, topic: "poopie pants" }
+    ];
+    let ref = makeRefObj(arr);
+    const commentArr = [
+      { created_by: "paul", belongs_to: "Anne's Article" },
+      { created_by: "joe", belongs_to: "Barticle" },
+      { created_by: "bill", belongs_to: "Phil's Article" }
+    ];
+    const commentCopy = [];
+    commentArr.forEach(object => {
+      commentCopy.push({ ...object });
+    });
+    const actual = formatComments(commentArr, ref);
+    expect(commentCopy).to.deep.equal(commentArr);
+    expect(actual[0]).not.to.equal(commentArr[0]);
   });
 });
