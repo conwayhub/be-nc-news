@@ -75,7 +75,7 @@ describe("NC News API", () => {
         .get("/api/users/conwayhasanaccount")
         .expect(404)
         .then(data => {
-          expect(data.body.msg).to.equal("content not found!");
+          expect(data.body.msg).to.equal("content not found");
         });
     });
   });
@@ -107,5 +107,106 @@ describe("NC News API", () => {
           });
       });
     });
+    it("GET 400 and a valid error message when passed an invalid data type as an article id", () => {
+      return request(app)
+        .get("/api/articles/conways_boss_article")
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
+    it("GET 404 and a valid error message when passed an article number that doesn't exist", () => {
+      return request(app)
+        .get("/api/articles/9999")
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("content not found");
+        });
+    });
+    it("PATCH 200 and returns an article object when passed a body with an inc_votes key", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({ inc_votes: 1 })
+        .expect(200)
+        .then(data => {
+          expect(data.body.article.votes).to.equal(101);
+        });
+    });
+    it("PATCH 200 when passed a negative number, decreases the votes", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({ inc_votes: -10 })
+        .expect(200)
+        .then(data => {
+          expect(data.body.article.votes).to.equal(90);
+        });
+    });
+    it("PATCH 400 and an appropriate error message when passed a bad data type", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({ inc_votes: "ten" })
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
+  });
+  describe("/api/articles/:article_id/comments", () => {
+    it("POST 201, returns 201 and a comment posted to the correct article", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({
+          username: "rogersop",
+          body: "I recognize psql as a bold warrior mouse, squeak squeak!"
+        })
+        .expect(201)
+        .then(data => {
+          expect(data.body.comment).to.have.all.keys(
+            "body",
+            "comment_id",
+            "author",
+            "article_id",
+            "votes",
+            "created_at"
+          );
+          expect(data.body.comment.article_id).to.equal(1);
+          expect(data.body.comment.author).to.equal("rogersop");
+        });
+    });
+    it("GET 200 returns an array of comments if given an article_id", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(data => {
+          expect(data.body.comments).to.be.an("array");
+          expect(data.body.comments[0]).to.have.all.keys(
+            "body",
+            "comment_id",
+            "author",
+            "article_id",
+            "votes",
+            "created_at"
+          );
+        });
+    });
+    it("Should return all comments posted to the article_id given", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .then(data => {
+          expect(data.body.comments.length).to.equal(13);
+        });
+    });
+    // it("Should accept the sort_by query, and sort comments by any valid column (defaulting to created_at)", () => {
+    //   return request(app)
+    //     .get("/api/articles/1/comments?sort_by=votes")
+    //     .then(data => {
+    //       const votes = [];
+    //       data.body.comments.forEach(element => {
+    //         const votes = sorted.push(element.votes);
+    //       });
+    //       const sorted = votes.sort();
+    //       console.log(sorted);
+    //     });
+    // });
   });
 });
