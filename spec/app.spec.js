@@ -1,8 +1,12 @@
 process.env.NODE_ENV = "test";
 const { app } = require("../app");
 const { expect } = require("chai");
+const chaiSorted = require("sams-chai-sorted");
 const request = require("supertest");
 const connection = require("../db/connection");
+const chai = require("chai");
+chai.use(chaiSorted);
+const { isItReal } = require("../models/articles.models");
 
 describe("NC News API", () => {
   beforeEach(() => {
@@ -196,17 +200,161 @@ describe("NC News API", () => {
           expect(data.body.comments.length).to.equal(13);
         });
     });
-    // it("Should accept the sort_by query, and sort comments by any valid column (defaulting to created_at)", () => {
-    //   return request(app)
-    //     .get("/api/articles/1/comments?sort_by=votes")
-    //     .then(data => {
-    //       const votes = [];
-    //       data.body.comments.forEach(element => {
-    //         const votes = sorted.push(element.votes);
-    //       });
-    //       const sorted = votes.sort();
-    //       console.log(sorted);
-    //     });
-    // });
+    it("By default, sorts by created_at, and descending)", () => {
+      return request(app)
+        .get("/api/articles/1/comments?")
+        .expect(200)
+        .then(data => {
+          expect(data.body.comments).to.be.sortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
+    it("when passed a sort_by query, sorts by that value, descending", () => {
+      return request(app)
+        .get("/api/articles/1/comments?sort_by=votes")
+        .then(data => {
+          expect(data.body.comments).to.be.sortedBy("votes", {
+            descending: true
+          });
+        });
+    });
+    it("when passed the order=ascending query, sorts in ascending order", () => {
+      return request(app)
+        .get("/api/articles/1/comments?order=asc")
+        .then(data => {
+          expect(data.body.comments).to.be.sortedBy("created_at");
+        });
+    });
+    it("allows you to chain multiple queries", () => {
+      return request(app)
+        .get("/api/articles/1/comments?sort_by=votes&order=asc")
+        .then(data => {
+          expect(data.body.comments).to.be.sortedBy("votes");
+        });
+    });
+    it("GET 404 if passed an invalid article ID", () => {
+      return request(app)
+        .get("/api/articles/9999/comments")
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("content not found");
+        });
+    });
+    it("GET 200 response with an empty array when passed an article with no comments", () => {
+      return request(app)
+        .get("/api/articles/2/comments")
+        .expect(200)
+        .then(data => {
+          expect(data.body.comments.length).to.equal(0);
+        });
+    });
+    it("GET 400 and an appropriate error message if passed an invalid data type into it's article ID", () => {
+      return request(app)
+        .get("/api/articles/conways_article/comments")
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
+  });
+  describe("/api/articles", () => {
+    it("GET 200 returns an array of articles", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(data => {
+          expect(data.body.articles).to.be.an("array");
+          expect(data.body.articles[0]).to.have.all.keys(
+            "author",
+            "title",
+            "article_id",
+            "body",
+            "topic",
+            "created_at",
+            "votes",
+            "comment_count"
+          );
+          expect(data.body.articles).to.be.sortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
+    it("accepts sort_by and order queries and sorts the array accordingly", () => {
+      return request(app)
+        .get("/api/articles?sort_by=title&order=asc")
+        .then(data => {
+          expect(data.body.articles).to.be.sortedBy("title");
+        });
+    });
+    it("accepts an author query, and filters the articles by author", () => {
+      return request(app)
+        .get("/api/articles?author=icellusedkars")
+        .then(data => {
+          data.body.articles.forEach(article => {
+            expect(article.author).to.equal("icellusedkars");
+          });
+          expect(data.body.articles.length).to.equal(6);
+        });
+    });
+    it("accepts a topic query, and filters the articles by topics", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .then(data => {
+          data.body.articles.forEach(article => {
+            expect(article.topic).to.equal("mitch");
+          });
+          expect(data.body.articles.length).to.equal(11);
+        });
+    });
+    it("accepts chained queries", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch&author=butter_bridge")
+        .then(data => {
+          expect(data.body.articles.length).to.equal(3);
+          data.body.articles.forEach(article => {
+            expect(article.topic).to.equal("mitch");
+            expect(article.author).to.equal("butter_bridge");
+          });
+        });
+    });
+    it("GET 200 if passed a user with no articles responds with an empty array", () => {
+      return request(app)
+        .get("/api/articles?author=lurker")
+        .expect(200)
+        .then(data => {
+          expect(data.body.articles).to.deep.equal([]);
+        });
+    });
+    it("GET 404 if passed a user who doesn't exist", () => {
+      return request(app)
+        .get("/api/articles?author=littlejimmynotreal")
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("content not found");
+        });
+    });
+  });
+  describe("isItReal", () => {
+    it("accepts a parameter, a value and a table and returns true if the parameter is on the table", () => {
+      return isItReal({ topic: "mitch" }, "topics").then(data => {
+        expect(data).to.equal(true);
+      });
+    });
+    it("returns false for failing queries", () => {
+      return isItReal({ topic: "not a topic" }, "topics").then(data => {
+        expect(data).to.equal(false);
+      });
+    });
+    it("also returns true when checking for usernames", () => {
+      return isItReal({ author: "icellusedkars" }, "users").then(data => {
+        expect(data).to.equal(true);
+      });
+    });
+    it("also returns true when checking for usernames", () => {
+      return isItReal({ author: "notarealperson" }, "users").then(data => {
+        expect(data).to.equal(false);
+      });
+    });
   });
 });

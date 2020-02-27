@@ -1,21 +1,34 @@
 const connection = require("../db/connection");
 
-const getArticlesByID = ({ params, body }) => {
-  console.log(body.inc_votes);
-  return (
-    connection("articles")
-      .first("articles.*")
-      .where("articles.article_id", "=", params.article_id)
-      .groupBy("articles.article_id")
-      //.groupBy("articles.article_id")
-      .count({ comment_count: "comments.article_id" })
-      .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
-      .modify(query => {
-        if (body.inc_votes) {
-          query.increment("votes", body.inc_votes).returning("*");
-        }
-      })
-  );
+const getArticlesByID = ({ params, body, query }) => {
+  return connection("articles")
+    .select("articles.*")
+    .orderBy(query.sort_by || "created_at", query.order || "desc")
+    .groupBy("articles.article_id")
+    .count({ comment_count: "comments.article_id" })
+    .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
+    .modify(queryById => {
+      if (params.article_id) {
+        queryById
+          .first("articles.*")
+          .where("articles.article_id", "=", params.article_id)
+          .modify(articleVotes => {
+            if (body.inc_votes) {
+              articleVotes.increment("votes", body.inc_votes).returning("*");
+            }
+          });
+      }
+    })
+    .modify(queryByAuthor => {
+      if (query.author) {
+        queryByAuthor.where("articles.author", "=", query.author);
+      }
+    })
+    .modify(queryByTopic => {
+      if (query.topic) {
+        queryByTopic.where("articles.topic", "=", query.topic);
+      }
+    });
 };
 
 const postCommentToArticle = ({ params, body }) => {
@@ -32,10 +45,25 @@ const postCommentToArticle = ({ params, body }) => {
     });
 };
 
-const getCommentsByArticleID = ({ params }) => {
-  return connection("comments")
+const getCommentsByArticleID = ({ params, query }) => {
+  const comments = connection("comments")
     .select("*")
-    .where("comments.article_id", "=", params.article_id);
+    .where("comments.article_id", "=", params.article_id)
+    .orderBy(query.sort_by || "created_at", query.order || "desc");
+
+  const articleReal = connection("articles")
+    .select("*")
+    .where("article_id", "=", params.article_id);
+
+  return Promise.all([comments, articleReal]).then(
+    ([comments, articleReal]) => {
+      if (articleReal.length > 0) {
+        return comments;
+      } else {
+        return Promise.reject({ status: 404 });
+      }
+    }
+  );
 };
 
 /*
@@ -56,7 +84,35 @@ const patchArticleWithVotes = ({ params, body }) => {
     .returning("*");
 };
 */
+
+const isItReal = (params, table) => {
+  if (table === "topics") {
+    return connection("topics")
+      .select("*")
+      .where("topics.slug", "=", params.topic)
+      .then(data => {
+        if (data.length === 0) {
+          return false;
+        } else {
+          return true;
+        }
+      });
+  } else if (table === "users") {
+    return connection("users")
+      .select("*")
+      .where("users.username", "=", params.author)
+      .then(data => {
+        if (data.length === 0) {
+          return false;
+        } else {
+          return true;
+        }
+      });
+  }
+};
+
 module.exports = {
+  isItReal,
   getCommentsByArticleID,
   getArticlesByID,
   postCommentToArticle //patchArticleWithVotes

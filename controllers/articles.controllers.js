@@ -20,7 +20,6 @@ const fetchArticleByID = (req, res, next) => {
 };
 
 const takesVotesOnArticles = (req, res, next) => {
-  console.log("hello");
   getArticlesByID(req)
     .then(article => {
       res.status(200).send({ article: article[0] });
@@ -31,9 +30,13 @@ const takesVotesOnArticles = (req, res, next) => {
 };
 
 const fetchCommentsByArticleID = (req, res, next) => {
-  getCommentsByArticleID(req).then(comments => {
-    res.status(200).send({ comments });
-  });
+  getCommentsByArticleID(req)
+    .then(comments => {
+      res.status(200).send({ comments });
+    })
+    .catch(err => {
+      next(err);
+    });
 };
 
 const postNewComment = (req, res, next) => {
@@ -42,9 +45,20 @@ const postNewComment = (req, res, next) => {
   });
 };
 
+const fetchAllArticles = (req, res, next) => {
+  getArticlesByID(req)
+    .then(articles => {
+      res.status(200).send({ articles });
+    })
+    .catch(err => {
+      next(err);
+    });
+};
+
 module.exports = {
   fetchArticleByID,
   takesVotesOnArticles,
   postNewComment,
-  fetchCommentsByArticleID
+  fetchCommentsByArticleID,
+  fetchAllArticles
 };
