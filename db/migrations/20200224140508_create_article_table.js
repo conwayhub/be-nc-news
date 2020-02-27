@@ -8,8 +8,14 @@ exports.up = function(knex) {
       .integer("votes")
       .defaultTo(0)
       .notNullable();
-    articleTable.string("topic").references("topics.slug");
-    articleTable.string("author").references("users.username");
+    articleTable
+      .string("topic")
+      .references("topics.slug")
+      .onDelete("cascade");
+    articleTable
+      .string("author")
+      .references("users.username")
+      .onDelete("cascade");
     articleTable.timestamp("created_at", { precision: 6 });
   });
 };

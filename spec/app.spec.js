@@ -334,6 +334,22 @@ describe("NC News API", () => {
           expect(data.body.msg).to.equal("content not found");
         });
     });
+    it("GET 404 if passed a topic that doesn't exist", () => {
+      return request(app)
+        .get("/api/articles?topic=conwayisthetopic")
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("content not found");
+        });
+    });
+    it("GET 200 if passed a user who does exist but has no comments", () => {
+      return request(app)
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(data => {
+          expect(data.body.articles).to.deep.equal([]);
+        });
+    });
   });
   describe("isItReal", () => {
     it("accepts a parameter, a value and a table and returns true if the parameter is on the table", () => {
@@ -355,6 +371,40 @@ describe("NC News API", () => {
       return isItReal({ author: "notarealperson" }, "users").then(data => {
         expect(data).to.equal(false);
       });
+    });
+  });
+  describe.only("/api/comments/:comment_id", () => {
+    it("PATCH 200, accepts a body in the form of votes, responds with a 201 status and the updated comment", () => {
+      return request(app)
+        .patch("/api/comments/1")
+        .send({ inc_votes: 1 })
+        .expect(200)
+        .then(data => {
+          expect(data.body.comment.votes).to.equal(17);
+        });
+    });
+    it("PATCH 200 when passed a negative number, decreases the votes", () => {
+      return request(app)
+        .patch("/api/comments/1")
+        .send({ inc_votes: -5 })
+        .expect(200)
+        .then(data => {
+          expect(data.body.comment.votes).to.equal(11);
+        });
+    });
+    it("PATCH 400 and an appropriate error message when passed a bad data type", () => {
+      return request(app)
+        .patch("/api/comments/1")
+        .send({ inc_votes: "ten" })
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
+    it("DELETE 204 returns no content", () => {
+      return request(app)
+        .delete("/api/comments/1")
+        .expect(204);
     });
   });
 });

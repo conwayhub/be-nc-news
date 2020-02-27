@@ -1,7 +1,18 @@
 const connection = require("../db/connection");
 
 const getArticlesByID = ({ params, body, query }) => {
-  return connection("articles")
+  console.log("1");
+  let reality = true;
+
+  if (query.author) {
+    console.log("2");
+    reality = isItReal(query, "users");
+  } else if (query.topic) {
+    reality = isItReal(query, "topics");
+  } else {
+    reality = [1];
+  }
+  const articles = connection("articles")
     .select("articles.*")
     .orderBy(query.sort_by || "created_at", query.order || "desc")
     .groupBy("articles.article_id")
@@ -29,6 +40,13 @@ const getArticlesByID = ({ params, body, query }) => {
         queryByTopic.where("articles.topic", "=", query.topic);
       }
     });
+  return Promise.all([reality, articles]).then(data => {
+    if (data[0]) {
+      return data[1];
+    } else {
+      return Promise.reject({ status: 404 });
+    }
+  });
 };
 
 const postCommentToArticle = ({ params, body }) => {
@@ -85,11 +103,11 @@ const patchArticleWithVotes = ({ params, body }) => {
 };
 */
 
-const isItReal = (params, table) => {
+const isItReal = (query, table) => {
   if (table === "topics") {
     return connection("topics")
       .select("*")
-      .where("topics.slug", "=", params.topic)
+      .where("topics.slug", "=", query.topic)
       .then(data => {
         if (data.length === 0) {
           return false;
@@ -100,7 +118,7 @@ const isItReal = (params, table) => {
   } else if (table === "users") {
     return connection("users")
       .select("*")
-      .where("users.username", "=", params.author)
+      .where("users.username", "=", query.author)
       .then(data => {
         if (data.length === 0) {
           return false;
