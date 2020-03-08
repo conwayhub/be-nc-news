@@ -23,5 +23,115 @@
         }
       ]
     }
+  },
+  "GET /api/users/:username": {
+    "description": "returns the object of user who's username has been passed",
+    "queries": [],
+    "exampleResponse": {
+      "user": {
+        "username": "conwaaaaay",
+        "avatar_url": "https://www.sciencenews.org/wp-content/uploads/2019/01/013019_JR_panda-diet_feat.jpg",
+        "name": "Conway McDermott"
+      }
+    }
+  },
+
+  "GET /api/articles/:/article_id": {
+    "description": "serves an article object matching the article_id passed",
+    "exampleResponse": {
+      "article": {
+        "article_id": 99,
+        "title": "Farting in a foreign language",
+        "votes": 100,
+        "topic": "Linguistics",
+        "author": "conwaaaay",
+        "created_at": 1527695953341,
+        "comment_count": 1000
+      }
+    }
+  },
+
+  "PATCH /api/articles/article_id": {
+    "description": "Updates the votes on the article by id given, and responds with the updated article object",
+    "queries": [],
+    "requirements": {
+      "inc_votes": "positive or negative integer"
+    },
+    "exampleResponse": {
+      "article": {
+        "article_id": 99,
+        "title": "Farting in a foreign language",
+        "votes": 101,
+        "topic": "Linguistics",
+        "author": "conwaaaay",
+        "created_at": 1527695953341,
+        "comment_count": 1000
+      }
+    }
+  },
+
+  "POST /api/articles/:article_id/comments": {
+    "description": "posts a new comment to an article by id, responds with the new comment object",
+    "requirements": {
+      "username": "unique user identifier",
+      "body": "comment text"
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 1,
+        "author": "conwaaaaay",
+        "article_id": 99,
+        "votes": 1,
+        "created_at": 1527695953341,
+        "body": "this article is a disgrace"
+      }
+    }
+  },
+
+  "GET /api/articles/:article_id/comments": {
+    "description": "Serves an array of all comments to a given article",
+    "queries": ["sort_by", "order"],
+    "exampleResponse": {
+      "comments": [
+        {
+          "comment_id": 1,
+          "author": "conwaaaaay",
+          "article_id": 99,
+          "votes": 1,
+          "created_at": 1527695953341,
+          "body": "this article is a disgrace"
+        },
+        {
+          "comment_id": 2,
+          "author": "billy_willums",
+          "article_id": 99,
+          "votes": 9,
+          "created_at": 1527695953341,
+          "body": "well I liked it."
+        }
+      ]
+    }
+  },
+
+  "PATCH /api/comments/:comment_id": {
+    "description": "updates a comment with a number of votes passed",
+    "queries": [],
+    "requirements": {
+      "inc_votes": "positive or negative integer"
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 2,
+        "author": "billy_willums",
+        "article_id": 99,
+        "votes": 9,
+        "created_at": 1527695953341,
+        "body": "well I liked it."
+      }
+    }
+  },
+  "DELETE /api/comments/:comment_id": {
+    "description": "removes a given comment",
+    "queries": []
   }
 }
