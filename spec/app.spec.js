@@ -15,7 +15,6 @@ describe("NC News API", () => {
   after(() => {
     return connection.destroy();
   });
-
   describe("/api/topics", () => {
     it("GET: 200 responds with an object", () => {
       console.log("makin' requests");
@@ -177,6 +176,43 @@ describe("NC News API", () => {
           expect(data.body.comment.author).to.equal("rogersop");
         });
     });
+    it("POST 404, returns 400 and an appropriate error message when passed an invalid username", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({
+          username: "conway",
+          body:
+            "I don't see what's so great about being on a database anyway..."
+        })
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("Foreign key");
+        });
+    });
+    it("POST 400 when passed an invalid data type, returns an appropriate error message", () => {
+      return request(app)
+        .post("/api/articles/not-a-valid-article/comments")
+        .send({
+          username: "rogersop",
+          body: "I recognize psql as a bold warrior mouse, squeak squeak!"
+        })
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
+    it("POST 404 when passed a comment for an article that doesn't exist", () => {
+      return request(app)
+        .post("/api/articles/9999/comments")
+        .send({
+          username: "rogersop",
+          body: "I recognize psql as a bold warrior mouse, squeak squeak!"
+        })
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("Foreign key");
+        });
+    });
     it("GET 200 returns an array of comments if given an article_id", () => {
       return request(app)
         .get("/api/articles/1/comments")
@@ -233,6 +269,14 @@ describe("NC News API", () => {
           expect(data.body.comments).to.be.sortedBy("votes");
         });
     });
+    it("GET 400 returns an appropriate error message if passed an invalid sort_by query", () => {
+      return request(app)
+        .get("/api/articles/1/comments?sort_by=not-a-column")
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
     it("GET 404 if passed an invalid article ID", () => {
       return request(app)
         .get("/api/articles/9999/comments")
@@ -285,6 +329,14 @@ describe("NC News API", () => {
         .get("/api/articles?sort_by=title&order=asc")
         .then(data => {
           expect(data.body.articles).to.be.sortedBy("title");
+        });
+    });
+    it("GET 400 and returns an appropriate error message when passed an invalid sort_by query", () => {
+      return request(app)
+        .get("/api/articles?sort_by=not-a-valid-column")
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
         });
     });
     it("accepts an author query, and filters the articles by author", () => {
@@ -350,6 +402,14 @@ describe("NC News API", () => {
           expect(data.body.articles).to.deep.equal([]);
         });
     });
+    it("PATCH 405 if forbidden method is attempted returns a 405 status and an appropriate message!", () => {
+      return request(app)
+        .patch("/api/articles")
+        .expect(405)
+        .then(data => {
+          expect(data.body.msg).to.equal("Error: Forbidden Method");
+        });
+    });
   });
   describe("isItReal", () => {
     it("accepts a parameter, a value and a table and returns true if the parameter is on the table", () => {
@@ -373,7 +433,7 @@ describe("NC News API", () => {
       });
     });
   });
-  describe.only("/api/comments/:comment_id", () => {
+  describe("/api/comments/:comment_id", () => {
     it("PATCH 200, accepts a body in the form of votes, responds with a 201 status and the updated comment", () => {
       return request(app)
         .patch("/api/comments/1")
@@ -392,6 +452,15 @@ describe("NC News API", () => {
           expect(data.body.comment.votes).to.equal(11);
         });
     });
+    it("PATCH 200 when sent a patch request with no inc_votes quality, returns the unchanged comment", () => {
+      return request(app)
+        .patch("/api/comments/1")
+        .send({})
+        .expect(200)
+        .then(data => {
+          expect(data.body.comment.votes).to.equal(16);
+        });
+    });
     it("PATCH 400 and an appropriate error message when passed a bad data type", () => {
       return request(app)
         .patch("/api/comments/1")
@@ -401,10 +470,53 @@ describe("NC News API", () => {
           expect(data.body.msg).to.equal("Bad data type");
         });
     });
+    it("PATCH 404 and an appropriate error message when passed a comment that doesn't exist", () => {
+      return request(app)
+        .patch("/api/comments/9999")
+        .send({ inc_votes: 10 })
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("content not found");
+        });
+    });
     it("DELETE 204 returns no content", () => {
       return request(app)
         .delete("/api/comments/1")
         .expect(204);
+    });
+    it("DELETE 404 returns an appropriate error message when used on a comment that does not exist", () => {
+      return request(app)
+        .delete("/api/comments/1000")
+        .expect(404)
+        .then(data => {
+          expect(data.body.msg).to.equal("content not found");
+        });
+    });
+    it("DELETE 400 returns an appropriate error message when passed a bad data type for comment id", () => {
+      return request(app)
+        .delete("/api/comments/my-real-comment")
+        .expect(400)
+        .then(data => {
+          expect(data.body.msg).to.equal("Bad data type");
+        });
+    });
+  });
+  describe("/api", () => {
+    it("GET /api responds with a 200 status and a pkg json of the api and it's endpoints", () => {
+      return request(app)
+        .get("/api")
+        .expect(200)
+        .then(data => {
+          expect(data.body.api).to.be.an("object");
+        });
+    });
+    it("DELETE /api responds with 405 status and Method Not Found", () => {
+      return request(app)
+        .delete("/api")
+        .expect(405)
+        .then(data => {
+          expect(data.body.msg).to.equal("Error: Forbidden Method");
+        });
     });
   });
 });

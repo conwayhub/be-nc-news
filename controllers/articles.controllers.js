@@ -40,9 +40,13 @@ const fetchCommentsByArticleID = (req, res, next) => {
 };
 
 const postNewComment = (req, res, next) => {
-  postCommentToArticle(req).then(comment => {
-    res.status(201).send({ comment });
-  });
+  postCommentToArticle(req)
+    .then(comment => {
+      res.status(201).send({ comment });
+    })
+    .catch(err => {
+      next(err);
+    });
 };
 
 const fetchAllArticles = (req, res, next) => {

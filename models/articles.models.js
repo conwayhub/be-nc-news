@@ -1,7 +1,6 @@
 const connection = require("../db/connection");
 
 const getArticlesByID = ({ params, body, query }) => {
-  console.log("1");
   let reality = true;
 
   if (query.author) {

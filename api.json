@@ -1,0 +1,23 @@
+{
+  "/api": { "GET": "responds with a json describing the api's routes!" },
+  "/api/topics": {
+    "GET": "responds with an array of topic objects!"
+  },
+  "/api/users/:username": { "GET": "responds with a user object " },
+  "/api/articles/:article_id": {
+    "GET": "responds with an article object, including all the articles values, including comment_count",
+    "PATCH": "accepts an object in the form `{ inc_votes: newVote }`, and increments the votes posted to that article based on what number is passed as newVote.  Responds with the updated article object"
+  },
+  "/api/articles/:article_id/comments": {
+    "POST": "Accepts an object with a username and body key, as the request's body.  Responds with the posted comment",
+    "GET": "Responds with an array of comment objects which all share comment_id"
+  },
+  "/api/articles": {
+    "GET": "responds with an `articles` array of article objects, and accepts queries, sort orders, etc."
+  },
+
+  "/api/comments/:comment_id": {
+    "PATCH": "accepts an object in the form `{ inc_votes: newVote }`, and increments the votes posted to that comment based on what number is passed as newVote.  Responds with the updated comment object",
+    "DELETE": "Deletes comment by ID, returns nothing"
+  }
+}

@@ -6,21 +6,24 @@ const {
   fetchCommentsByArticleID,
   fetchAllArticles
 } = require("../controllers/articles.controllers");
-//const { checkForValidKeys } = require("../middleware/index");
+const { checkForVotes, checkValidSorting } = require("../middleware/index");
 const { send405Error } = require("../errors");
 
 articlesRouter
   .route("/:article_id")
   .get(fetchArticleByID)
-  .patch(takesVotesOnArticles)
+  .patch(checkForVotes, takesVotesOnArticles)
   .all(send405Error);
 
-articlesRouter.route("/").get(fetchAllArticles);
+articlesRouter
+  .route("/")
+  .get(checkValidSorting, fetchAllArticles)
+  .all(send405Error);
 
 articlesRouter
   .route("/:article_id/comments")
   .post(postNewComment)
-  .get(fetchCommentsByArticleID)
+  .get(checkValidSorting, fetchCommentsByArticleID)
   .all(send405Error);
 
 module.exports = { articlesRouter };

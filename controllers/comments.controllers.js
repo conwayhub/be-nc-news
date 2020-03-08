@@ -14,9 +14,13 @@ const patchCommentVotes = (req, res, next) => {
 };
 
 const deleteComments = (req, res, next) => {
-  deleteCommentsById(req).then(no_content => {
-    res.status(204).send();
-  });
+  deleteCommentsById(req)
+    .then(no_content => {
+      res.status(204).send();
+    })
+    .catch(err => {
+      next(err);
+    });
 };
 
 module.exports = { patchCommentVotes, deleteComments };
