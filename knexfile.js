@@ -20,6 +20,8 @@ const customConfig = {
       password: "password1"
     },
     pool: {
+      min: 0,
+      max: 7,
       propagateCreateError: false // <- default is true, set to false
     }
   },
@@ -32,9 +34,7 @@ const customConfig = {
   },
   production: {
     connection: `${DB_URL}?ssl=true`,
-    pool: {
-      propagateCreateError: false
-    }
+    pool: { min: 0, max: 7, propagateCreateError: false }
   }
 };
 
