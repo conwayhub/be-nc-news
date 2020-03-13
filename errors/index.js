@@ -22,7 +22,7 @@ const psqlErrorHandler = (err, req, res, next) => {
 };
 
 const send500Error = (err, req, res, next) => {
-  res.status(500).send({ msg: "Sorry, it's an internal server error" });
+  res.status(500).send({ msg: "Sorry, it's an internal server error" + err });
 };
 
 const send405Error = (req, res, next) => {
