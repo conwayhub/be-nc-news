@@ -18,6 +18,9 @@ const customConfig = {
       database: "nc_news",
       user: "conway",
       password: "password1"
+    },
+    pool: {
+      propagateCreateError: false // <- default is true, set to false
     }
   },
   test: {
@@ -28,7 +31,10 @@ const customConfig = {
     }
   },
   production: {
-    connection: `${DB_URL}?ssl=true`
+    connection: `${DB_URL}?ssl=true`,
+    pool: {
+      propagateCreateError: false
+    }
   }
 };
 
