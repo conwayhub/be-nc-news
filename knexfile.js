@@ -9,26 +9,6 @@ const baseConfig = {
   },
   seeds: {
     directory: "./db/seeds"
-  },
-  production: {
-    connection: `${DB_URL}?ssl=true`
-  }
-};
-
-const customConfig = {
-  development: {
-    connection: {
-      database: "nc_news",
-      user: "conway",
-      password: "password1"
-    }
-  },
-  test: {
-    connection: {
-      database: "nc_news_test",
-      user: "conway",
-      password: "password1"
-    }
   }
 };
 
