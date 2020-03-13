@@ -15,4 +15,21 @@ const baseConfig = {
   }
 };
 
+const customConfig = {
+  development: {
+    connection: {
+      database: "nc_news",
+      user: "conway",
+      password: "password1"
+    }
+  },
+  test: {
+    connection: {
+      database: "nc_news_test",
+      user: "conway",
+      password: "password1"
+    }
+  }
+};
+
 module.exports = { ...customConfig[ENV], ...baseConfig };
