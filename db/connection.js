@@ -7,4 +7,4 @@ const dbConfig =
     : require("../knexfile");
 const connection = knex(dbConfig);
 
-module.exports = knex(dbConfig);
+module.exports = connection;
