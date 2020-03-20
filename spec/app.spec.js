@@ -17,7 +17,6 @@ describe("NC News API", () => {
   });
   describe("/api/topics", () => {
     it("GET: 200 responds with an object", () => {
-      console.log("makin' requests");
       return request(app)
         .get("/api/topics")
         .expect(200)

@@ -4,7 +4,6 @@ const getArticlesByID = ({ params, body, query }) => {
   let reality = true;
 
   if (query.author) {
-    console.log("2");
     reality = isItReal(query, "users");
   } else if (query.topic) {
     reality = isItReal(query, "topics");

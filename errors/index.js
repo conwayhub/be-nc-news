@@ -9,7 +9,7 @@ const customErrorHandler = (err, req, res, next) => {
 };
 
 const psqlErrorHandler = (err, req, res, next) => {
-  if (err.hasOwnProperty("status")) {
+  if (err.hasOwnProperty("code")) {
     let errCode = err.code;
     const errors = {
       "22P02": { status: 400, msg: "Bad data type" },
